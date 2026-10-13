@@ -1,0 +1,13 @@
+{
+  "name": "villflow-v4",
+  "private": true,
+  "version": "0.7.0",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.9.0"
+  }
+}

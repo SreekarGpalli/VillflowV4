@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "IPC for VillFlow's own UI only. Provider windows (chatgpt.com etc.) get no IPC access.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

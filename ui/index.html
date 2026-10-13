@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VillFlow</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M3.5 14.5c1.6 0 2.4-1.1 3.6-1.1 1.4 0 2.4 2.6 4.9 2.6 2.6 0 3.4-6.5 5.4-6.5 1.2 0 1.6 1.3 3.1 1.3"/></svg>
+      </span>
+      <span class="brand-name">VillFlow</span>
+    </div>
+    <nav aria-label="Pages">
+      <button class="nav-item active" data-view="home"><i data-icon="home"></i>Home</button>
+      <button class="nav-item" data-view="history"><i data-icon="history"></i>History</button>
+      <button class="nav-item" data-view="dictionary"><i data-icon="book"></i>Dictionary</button>
+      <button class="nav-item" data-view="providers"><i data-icon="user"></i>Accounts</button>
+      <button class="nav-item" data-view="settings"><i data-icon="sliders"></i>Settings</button>
+    </nav>
+    <div class="sidebar-foot">
+      <button class="status-line" id="statusLine" data-goto="providers" title="Account status">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">Checking Gemini…</span>
+      </button>
+    </div>
+  </aside>
+
+  <main>
+    <!-- HOME -->
+    <section class="view active home" id="view-home" aria-labelledby="homeTitle">
+      <header class="home-head" role="status">
+        <div class="home-head-text">
+          <h1 id="homeTitle">Ready to dictate</h1>
+          <p class="lede" id="homeLede"></p>
+        </div>
+        <div class="home-head-action" id="homeAction"></div>
+      </header>
+
+      <section class="setup" id="setupCard" hidden aria-labelledby="setupTitle">
+        <h2 id="setupTitle">Finish setting up</h2>
+        <ol class="steps">
+          <li id="stepSignin">
+            <div class="step-body">
+              <b>Sign in to <span class="setup-provider">Gemini</span></b>
+              <span>A normal browser window opens. Sign in, then close it. VillFlow keeps the page ready in the background.</span>
+              <div class="step-actions">
+                <button class="btn primary" id="setupSignIn">Open Gemini</button>
+                <span class="inline-status" id="setupStatus"></span>
+              </div>
+            </div>
+          </li>
+          <li>
+            <div class="step-body">
+              <b>Say something</b>
+              <span>Records five seconds with your microphone and shows what came back.</span>
+              <div class="step-actions">
+                <button class="btn" id="setupTry">Test dictation</button>
+              </div>
+              <p class="result" id="setupResult" hidden></p>
+            </div>
+          </li>
+          <li>
+            <div class="step-body">
+              <b>Use it anywhere</b>
+              <span>Click into any text field, hold <span class="keys" id="setupHotkey"></span>, speak, and let go.</span>
+              <div class="step-actions">
+                <button class="btn" id="setupDone">Done</button>
+              </div>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <section class="shortcuts" aria-label="Shortcuts">
+        <div class="sc">
+          <div class="sc-head"><h2>Dictate</h2><span class="keys lg" id="kpDictKeys"></span></div>
+          <p class="sc-text" id="kpDictText">Hold, speak, let go. Your words appear wherever the cursor is.</p>
+          <p class="sc-meta" id="kpDictMeta"></p>
+          <p class="sc-tip">Names or terms coming out wrong? <button class="link" data-goto="dictionary">Add them to your dictionary</button></p>
+        </div>
+        <div class="sc" id="scCmd">
+          <div class="sc-head"><h2>Command</h2><span class="keys lg" id="scCmdKeys"></span></div>
+          <p class="sc-text" id="scCmdOff" hidden>Turned off. <button class="link" data-goto="settings">Turn it on in Settings</button></p>
+          <div class="examples" id="scCmdTable">
+            <h3>With text selected, say</h3>
+            <ul>
+              <li><q>make this more formal</q><span>replaces it</span></li>
+              <li><q>what does this mean?</q><span>answers below it</span></li>
+              <li><q>continue this</q><span>adds right after it</span></li>
+            </ul>
+            <h3>With nothing selected, say</h3>
+            <ul>
+              <li><q>what’s 15% of 2,400?</q><span>types the answer</span></li>
+            </ul>
+          </div>
+          <p class="sc-meta" id="scCmdWho"></p>
+        </div>
+      </section>
+
+      <section class="home-section" aria-labelledby="actTitle">
+        <div class="section-head"><h2 id="actTitle">Activity</h2></div>
+        <div class="panel activity">
+          <div class="totals">
+            <div class="lead">
+              <span class="t-label">Time saved</span>
+              <span class="t-lead" id="sSaved">0m</span>
+              <span class="t-note" id="sSavedFoot">vs. typing at 40 wpm</span>
+            </div>
+            <dl>
+              <div><dt>Words</dt><dd id="sWords">0</dd></div>
+              <div><dt>Today</dt><dd id="sWordsToday">0</dd></div>
+              <div><dt>Dictations</dt><dd id="sCount">0</dd></div>
+              <div><dt>Pace</dt><dd><span id="sWpm">0</span> wpm</dd></div>
+              <div><dt>Streak</dt><dd id="sStreak">0 days</dd></div>
+            </dl>
+          </div>
+          <div class="chart">
+            <div class="chart-head"><span>Words per day</span><span>last 14 days</span></div>
+            <div class="chart-plot">
+              <span class="chart-max" id="chartMax"></span>
+              <div class="bars" id="dailyBars" role="img" aria-label="Words per day"></div>
+              <p class="chart-empty" id="chartEmpty" hidden>Your first dictation starts the chart.</p>
+            </div>
+            <div class="bars-axis"><span id="axisStart"></span><span>Today</span></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="home-lists">
+        <section class="home-section" aria-labelledby="recentTitle">
+          <div class="section-head"><h2 id="recentTitle">Recent</h2><button class="link" data-goto="history">All history<i data-icon="arrow"></i></button></div>
+          <div class="panel flush">
+            <ul class="recent" id="recentList"></ul>
+            <p class="empty pad" id="recentEmpty">Nothing yet. Your dictations will show up here.</p>
+          </div>
+        </section>
+        <section class="home-section" aria-labelledby="appsTitle">
+          <div class="section-head"><h2 id="appsTitle">Top apps</h2><span class="section-note">by words</span></div>
+          <div class="panel">
+            <ul class="apps" id="topApps"></ul>
+            <p class="empty" id="appsEmpty">The apps you dictate into most.</p>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section class="view" id="view-history" aria-labelledby="historyTitle">
+      <header class="page-head">
+        <div>
+          <h1 id="historyTitle">History</h1>
+          <p class="lede">Stored only on this PC.</p>
+        </div>
+      </header>
+      <div class="toolbar">
+        <label class="search">
+          <i data-icon="search"></i>
+          <input id="search" type="search" placeholder="Search" aria-label="Search history" autocomplete="off" />
+        </label>
+        <div class="seg" id="historyFilter" role="radiogroup" aria-label="Show">
+          <button data-value="" class="on" role="radio">All</button>
+          <button data-value="dictation" role="radio">Dictation</button>
+          <button data-value="ai" role="radio">Commands</button>
+        </div>
+      </div>
+      <div id="historyGroups"></div>
+      <p class="empty big" id="historyEmpty" hidden></p>
+      <div class="center"><button class="btn" id="loadMore" hidden>Show more</button></div>
+    </section>
+
+    <!-- DICTIONARY -->
+    <section class="view" id="view-dictionary" aria-labelledby="dictTitle">
+      <header class="page-head">
+        <div>
+          <h1 id="dictTitle">Dictionary</h1>
+          <p class="lede">Names and terms that should always come out your way. Replacements apply to every dictation, and the spellings are passed along when the AI writes for you.</p>
+        </div>
+      </header>
+      <form class="panel dict-add" id="dictForm" autocomplete="off">
+        <label><span>When it hears</span><input id="dictFrom" placeholder="villa flow" /></label>
+        <i data-icon="arrow" class="dict-arrow"></i>
+        <label><span>Write</span><input id="dictTo" placeholder="VillFlow" /></label>
+        <button class="btn primary" type="submit">Add</button>
+      </form>
+      <section class="panel flush" id="dictCard">
+        <ul class="dict-list" id="dictList"></ul>
+        <p class="empty pad" id="dictEmpty">No words yet. Add a name or term the moment it comes out wrong.</p>
+      </section>
+    </section>
+
+    <!-- ACCOUNTS -->
+    <section class="view" id="view-providers" aria-labelledby="accountsTitle">
+      <header class="page-head">
+        <div>
+          <h1 id="accountsTitle">Accounts</h1>
+          <p class="lede">VillFlow uses the Gemini and ChatGPT accounts you already have, through their own websites. No API keys and nothing extra to pay.</p>
+        </div>
+      </header>
+
+      <section class="panel settings" aria-label="Roles">
+        <div class="setting">
+          <div class="setting-text"><b>Dictation</b><span>Who turns your voice into text. Gemini is usually the most accurate.</span></div>
+          <div class="seg" data-setting="provider" id="providerSeg" role="radiogroup" aria-label="Dictation"></div>
+        </div>
+        <div class="setting">
+          <div class="setting-text"><b>Commands and polish</b><span>Who answers questions and rewrites text. Runs in a temporary chat, so nothing is saved to your chat history.</span></div>
+          <div class="seg" data-setting="writer" id="writerSeg" role="radiogroup" aria-label="Commands and polish"></div>
+        </div>
+      </section>
+
+      <div class="accounts" id="providerCards"></div>
+
+      <section class="panel try" aria-labelledby="tryTitle">
+        <div class="panel-head">
+          <div>
+            <h2 id="tryTitle">Test dictation</h2>
+            <p class="hint">Records five seconds with <span class="active-provider">Gemini</span>.</p>
+          </div>
+          <button class="btn primary" id="tryBtn">Start test</button>
+        </div>
+        <p class="result" id="tryResult" hidden></p>
+      </section>
+
+      <details class="panel troubleshoot">
+        <summary>Troubleshooting</summary>
+        <p class="hint">These sites change their layout now and then. If dictation stops working, Inspect lists the buttons VillFlow can see, and you can update its button patterns without reinstalling.</p>
+        <div class="btn-row">
+          <button class="btn" id="inspectBtn">Inspect</button>
+          <button class="btn" id="showWindowBtn">Show page</button>
+          <button class="btn" id="customizeBtn">Edit patterns</button>
+          <button class="btn" id="reloadSelBtn">Reload patterns</button>
+          <button class="btn quiet" id="resetSelBtn">Reset to defaults</button>
+        </div>
+        <pre class="inspect" id="inspectOut" hidden></pre>
+      </details>
+
+      <p class="fineprint">These sites' terms don't allow automated use. VillFlow acts only when you press the hotkey, one request at a time, but you use it with your own account at your own discretion.</p>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="view-settings" aria-labelledby="settingsTitle">
+      <header class="page-head"><div><h1 id="settingsTitle">Settings</h1></div></header>
+
+      <h2 class="group-title">Dictation</h2>
+      <section class="panel settings">
+        <div class="setting">
+          <div class="setting-text"><b>Hotkey</b><span>Click, then press the keys you want. Needs Ctrl, Shift, Alt or Win.</span></div>
+          <button class="hotkey" id="hotkeyBtn" aria-label="Dictation hotkey"></button>
+        </div>
+        <div class="setting">
+          <div class="setting-text"><b>Trigger</b><span>Hold while you talk, or press once to start and again to stop.</span></div>
+          <div class="seg" data-setting="trigger" role="radiogroup" aria-label="Trigger">
+            <button data-value="hold" role="radio">Hold</button><button data-value="toggle" role="radio">Toggle</button>
+          </div>
+        </div>
+        <div class="setting">
+          <div class="setting-text"><b>Output</b><span>Paste is fastest. Type works in apps that block pasting. Copy leaves the text on the clipboard.</span></div>
+          <div class="seg" data-setting="output" role="radiogroup" aria-label="Output">
+            <button data-value="paste" role="radio">Paste</button><button data-value="type" role="radio">Type</button><button data-value="copy" role="radio">Copy</button>
+          </div>
+        </div>
+        <label class="setting">
+          <div class="setting-text"><b>Keep my clipboard</b><span>Put back whatever you had copied after pasting.</span></div>
+          <input type="checkbox" class="switch" data-setting="restore_clipboard" />
+        </label>
+        <label class="setting">
+          <div class="setting-text"><b>Space after each dictation</b><span>So back-to-back dictations don't run together.</span></div>
+          <input type="checkbox" class="switch" data-setting="add_trailing_space" />
+        </label>
+      </section>
+
+      <h2 class="group-title">Commands</h2>
+      <section class="panel settings">
+        <div class="setting">
+          <div class="setting-text"><b>Command hotkey</b><span>Select text and say what to change or ask. With nothing selected, ask a question or say what to write.</span></div>
+          <div class="hotkey-row">
+            <button class="hotkey" id="cmdHotkeyBtn" aria-label="Command hotkey"></button>
+            <button class="btn quiet" id="cmdOffBtn">Turn off</button>
+          </div>
+        </div>
+        <label class="setting">
+          <div class="setting-text"><b>Polish dictations</b><span>Remove filler words and false starts and fix punctuation before pasting. Adds a few seconds.</span></div>
+          <input type="checkbox" class="switch" data-setting="polish" />
+        </label>
+        <div class="setting" id="modelSetting">
+          <div class="setting-text"><b>Gemini model for writing</b><span id="modelHint">Your own Gemini model choice is put back afterwards.</span></div>
+          <div class="seg" data-setting="writing_model" role="radiogroup" aria-label="Gemini model for writing">
+            <button data-value="fastest" role="radio">Fastest</button><button data-value="balanced" role="radio">Balanced</button><button data-value="current" role="radio">Mine</button>
+          </div>
+        </div>
+      </section>
+
+      <h2 class="group-title">General</h2>
+      <section class="panel settings">
+        <label class="setting">
+          <div class="setting-text"><b>Start with Windows</b><span>Opens quietly in the tray when you sign in.</span></div>
+          <input type="checkbox" class="switch" data-setting="launch_at_login" />
+        </label>
+        <label class="setting">
+          <div class="setting-text"><b>Save history</b><span>Keep transcripts on this PC. Totals on Home are counted either way.</span></div>
+          <input type="checkbox" class="switch" data-setting="save_history" />
+        </label>
+        <div class="setting">
+          <div class="setting-text"><b>Free memory when idle</b><span>Unload the pages after a while. The next dictation then takes a few seconds longer to start.</span></div>
+          <div class="seg" data-setting="free_memory_after_mins" data-number role="radiogroup" aria-label="Free memory when idle">
+            <button data-value="0" role="radio">Never</button><button data-value="10" role="radio">10 min</button><button data-value="30" role="radio">30 min</button><button data-value="60" role="radio">1 hour</button>
+          </div>
+        </div>
+        <div class="setting">
+          <div class="setting-text"><b>Your typing speed</b><span>Used to work out time saved.</span></div>
+          <label class="num"><input type="number" min="5" max="200" step="5" data-setting="typing_wpm" aria-label="Typing speed in words per minute" /> wpm</label>
+        </div>
+      </section>
+
+      <h2 class="group-title">Data</h2>
+      <section class="panel settings">
+        <div class="setting">
+          <div class="setting-text"><b>Data folder</b><span class="path" id="dataDir"></span></div>
+          <button class="btn" id="openDataBtn">Open folder</button>
+        </div>
+        <div class="setting">
+          <div class="setting-text"><b>Clear history</b><span>Deletes every saved transcript. Totals on Home stay.</span></div>
+          <button class="btn danger" id="clearHistoryBtn">Clear history</button>
+        </div>
+      </section>
+      <p class="fineprint" id="versionLine"></p>
+    </section>
+  </main>
+
+  <dialog class="dialog" id="confirmDialog" aria-labelledby="confirmTitle">
+    <form method="dialog">
+      <h2 id="confirmTitle"></h2>
+      <p id="confirmText"></p>
+      <div class="dialog-actions">
+        <button class="btn" value="cancel">Cancel</button>
+        <button class="btn danger-fill" value="ok" id="confirmOk">OK</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"><i class="toast-icon"></i><span></span></div>
+  <script src="app.js"></script>
+</body>
+</html>

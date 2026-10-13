@@ -1,0 +1,80 @@
+name: Release
+
+# Push a tag like v0.7.0 (matching the version in tauri.conf.json) to build the
+# Windows installer and portable exe and publish them as a GitHub release, with
+# the notes taken from that version's section in CHANGELOG.md.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tag matches app version
+        shell: pwsh
+        run: |
+          $version = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).version
+          if ("v$version" -ne "${{ github.ref_name }}") {
+            throw "Tag ${{ github.ref_name }} doesn't match tauri.conf.json version $version"
+          }
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build installer
+        run: npm run build
+
+      - name: Collect files
+        shell: pwsh
+        run: |
+          $v = "${{ github.ref_name }}".TrimStart('v')
+          New-Item -ItemType Directory dist | Out-Null
+          Copy-Item "src-tauri/target/release/bundle/nsis/VillFlow V4_${v}_x64-setup.exe" "dist/VillFlow-V4_${v}_x64-setup.exe"
+          Copy-Item "src-tauri/target/release/villflow.exe" "dist/VillFlow-V4_${v}_x64-portable.exe"
+          Get-ChildItem dist | ForEach-Object {
+            "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)"
+          } | Set-Content -Encoding ascii dist/SHA256SUMS.txt
+          Get-Content dist/SHA256SUMS.txt
+
+      - name: Release notes from CHANGELOG.md
+        shell: pwsh
+        run: |
+          $v = "${{ github.ref_name }}".TrimStart('v')
+          $lines = Get-Content CHANGELOG.md
+          $start = ($lines | Select-String -Pattern "^## \[?$([regex]::Escape($v))\]?" | Select-Object -First 1).LineNumber
+          if (-not $start) { throw "No CHANGELOG.md section for $v" }
+          $notes = @()
+          foreach ($line in $lines[$start..($lines.Count - 1)]) {
+            if ($line -match '^## ') { break }
+            $notes += $line
+          }
+          ($notes -join "`n").Trim() | Set-Content -Encoding utf8 notes.md
+
+      - name: Publish release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          gh release view $tag 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag (Get-ChildItem dist).FullName --clobber
+          } else {
+            gh release create $tag (Get-ChildItem dist).FullName --title "VillFlow V4 $($tag.TrimStart('v'))" --notes-file notes.md
+          }
